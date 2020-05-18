@@ -4,11 +4,61 @@ import random
 
 class TicTacToe:
 
-	moveCount = 0
+	moveCount = 1
 	def __init__(self,size,noPlayer):
 		self.size = size
 		self.noPlayer = noPlayer
 		self.bord = np.zeros((size,size), dtype=int)
+
+	def checkWon(self):
+		cross01 = 0
+		cross02 = 0
+		h=0
+		v=0
+		temp1 = -100
+		temp2 = -100
+		for i in range(0,self.size):
+			v = 0
+			h = 0
+			temp4 = -100
+			temp3 = -100
+			for j in range(0,self.size):
+				if self.bord[i][j] != 0:
+					#Horizontal check
+					if self.bord[i][j] != temp4:
+						temp4 = self.bord[i][j]
+						h = 1
+					else:
+						h += 1
+					#Vertical check
+					if self.bord[j][i] != temp3:
+						temp3 = self.bord[j][i]
+						v = 1
+					else:
+						v += 1
+					#Cross Check01
+					if i == j:
+						if self.bord[j][i] != temp2:
+							temp2 = self.bord[i][j]
+							cross02 = 1
+						else:
+							cross02+=1
+					if i+j == self.size-1:
+						if self.bord[j][i] != temp1:
+							temp1 = self.bord[i][j]
+							cross01 = 1
+						else:
+							cross02+=1
+			#Check won H&V
+			if h == self.size:
+				return temp4
+			if v == self.size:
+				return temp3
+		if cross01 == self.size:
+			return temp1
+		if cross02 == self.size:
+			return temp2
+		return 0
 
 
 	def gameManagerCPU(self):
@@ -36,17 +86,21 @@ class TicTacToe:
 				flag = False
 		self.move(x-1, y-1)
 
-
+	def getCurrentPlayer(self):
+		currentPlayer = self.moveCount%self.noPlayer
+		if currentPlayer == 0:
+			currentPlayer = self.noPlayer
+		return currentPlayer
 	def move(self,x,y):
 		#set not zero id for players
 		if self.bord[x][y] != 0:
 			return
-		currentPlayer = self.moveCount%self.noPlayer
-		if currentPlayer == 0:
-			currentPlayer = self.noPlayer
-
-		self.bord[x][y] = currentPlayer
+		self.bord[x][y] = self.getCurrentPlayer()
 		self.moveCount += 1
+		if self.checkWon() != 0:
+			self.printBord()
+			print(f'Player {self.checkWon()} won !')
+			exit()
 
 	def printBord(self):
 		print('\x1bc')
@@ -78,4 +132,4 @@ class TicTacToe:
 		print() #New Line
 
 
-TicTacToe(8, 2).gameManagerCPU()
+TicTacToe(3, 2).gameManagerCPU()
