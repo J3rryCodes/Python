@@ -4,13 +4,22 @@ import random
 
 class TicTacToe:
 
-	moveCount = 1
+	playerFlag = 0
+	moveCount = 0
 	def __init__(self,size,noPlayer):
 		self.size = size
 		self.noPlayer = noPlayer
 		self.bord = np.zeros((size,size), dtype=int)
 
 	def checkWon(self):
+		flag = self.checkBord()
+		if flag == 0:
+			return 0
+		elif flag == self.playerFlag:
+			return 1
+		else:
+			return -1
+	def checkBord(self):
 		cross01 = 0
 		cross02 = 0
 		h=0
@@ -62,9 +71,10 @@ class TicTacToe:
 
 
 	def gameManagerCPU(self):
-		#First Turn Human
+		
 		while True:
 			if self.moveCount % 2 == 0:
+				self.playerFlag = self.getCurrentPlayer()
 				self.humanMove()
 			else:
 				self.cpuMove()
@@ -97,9 +107,16 @@ class TicTacToe:
 			return
 		self.bord[x][y] = self.getCurrentPlayer()
 		self.moveCount += 1
-		if self.checkWon() != 0:
-			self.printBord()
-			print(f'Player {self.checkWon()} won !')
+
+
+		tempResult = self.checkWon()
+		if tempResult != 0:
+			if tempResult > 0:
+				self.printBord()
+				print(f'You won !')
+			else:
+				self.printBord()
+				print(f'You Lose !')
 			exit()
 
 	def printBord(self):
