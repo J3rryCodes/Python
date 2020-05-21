@@ -1,152 +1,156 @@
+from tabulate import tabulate
 import numpy as np
-import string
-import random
 
 class TicTacToe:
-
-	playerFlag = 0
-	moveCount = 0
-	def __init__(self,size,noPlayer):
-		self.size = size
-		self.noPlayer = noPlayer
-		self.bord = np.zeros((size,size), dtype=int)
-
-	def checkWon(self):
-		flag = self.checkBord()
-		if flag == 0:
-			return 0
-		elif flag == self.playerFlag:
-			return 1
+	flag = {0:' ',1:'X',2:'O'}
+	count = 0
+	depth = 3
+	def __init__(self,size,firestPlay):
+		self.bord = np.zeros((size,size))
+		self.size = size 
+		if firestPlay:
+			self.humanFlag = 1
+			self.cpuFlag = 2
 		else:
-			return -1
+			self.humanFlag = 2
+			self.cpuFlag = 1
+
+	def displayBord(self):
+		#print('\x1bc')
+		#header = [i for i in range(0,10)]
+		#bord = tabulate([[self.flag[i] for i in self.bord[j]] for j in range(0,self.size)])
+		#print(tabulate(bord,header,tablefmt="grid",showindex="always"))
+		print(self.bord)
+
+	def setFlag(self,x,y,flag):
+		if self.bord[x][y] != 0:
+			return
+		print("Flag",flag)
+		self.bord[x][y] = flag
+
+		#Adding count by one ----
+		self.count += 1
+
+	#Returns who won in digit
 	def checkBord(self):
-		cross01 = 0
-		cross02 = 0
-		h=0
-		v=0
-		temp1 = -100
-		temp2 = -100
+		c1Count = 0
+		c2Count = 0
+
+		c1Val = self.bord[0][0]
+		c2Val = self.bord[0][self.size-1]
 		for i in range(0,self.size):
-			v = 0
-			h = 0
-			temp4 = -100
-			temp3 = -100
+			vCount = 0
+			hCount = 0
+			vVal = 0
+			hVal = self.bord[i][0]
 			for j in range(0,self.size):
+				#no need to check but atleast its help run faster 
+				if self.bord[j][i] != 0:
+					if j == 0:
+						vVal = self.bord[0][i]
+					#Vertical check
+					if vVal == self.bord[j][i]:
+						vCount+=1
+					if vCount == self.size:
+						return vVal
+				#no need to check but atleast its help run faster 
 				if self.bord[i][j] != 0:
 					#Horizontal check
-					if self.bord[i][j] != temp4:
-						temp4 = self.bord[i][j]
-						h = 1
-					else:
-						h += 1
-					#Vertical check
-					if self.bord[j][i] != temp3:
-						temp3 = self.bord[j][i]
-						v = 1
-					else:
-						v += 1
-					#Cross Check01
-					if i == j:
-						if self.bord[j][i] != temp2:
-							temp2 = self.bord[i][j]
-							cross02 = 1
-						else:
-							cross02+=1
-					if i+j == self.size-1:
-						if self.bord[j][i] != temp1:
-							temp1 = self.bord[i][j]
-							cross01 = 1
-						else:
-							cross02+=1
-			#Check won H&V
-			if h == self.size:
-				return temp4
-			if v == self.size:
-				return temp3
-		if cross01 == self.size:
-			return temp1
-		if cross02 == self.size:
-			return temp2
+					if hVal == self.bord[i][j]:
+						hCount += 1
+					if hCount == self.size:
+						return hVal
+				#cross R -> L
+				if i==j and self.bord[i][j] == c1Val:
+					c1Count += 1
+					if c1Count == self.size:
+						return c1Val
+				#Cross L -> R
+				if i+j == self.size-1 and self.bord[i][j] == c2Val:
+					c2Count+=1
+					if c2Count == self.size:
+						return c2Val
 		return 0
 
 
-	def gameManagerCPU(self):
-		
-		while True:
-			if self.moveCount % 2 == 0:
-				self.playerFlag = self.getCurrentPlayer()
+	def gameManager(self):
+		while True :
+			if (self.count%2)+1 == self.humanFlag:
 				self.humanMove()
 			else:
 				self.cpuMove()
 
-	def cpuMove(self):
-		x = random.randint(0, self.size-1)
-		y = random.randint(0, self.size-1)
-
-		self.move(x, y)
-
 	def humanMove(self):
-		flag = True
-		x=y=0
-		while flag:
-			self.printBord()
-			x = int(input("Enter X : "))
-			y = int(input("Enter Y : "))
-			if x<=self.size and y<=self.size:
-				flag = False
-		self.move(x-1, y-1)
+		print("HUMAN")
+		self.displayBord()
+		x = int(input("X : "))
+		y = int(input("Y : "))
 
-	def getCurrentPlayer(self):
-		currentPlayer = self.moveCount%self.noPlayer
-		if currentPlayer == 0:
-			currentPlayer = self.noPlayer
-		return currentPlayer
-	def move(self,x,y):
-		#set not zero id for players
-		if self.bord[x][y] != 0:
+		if x>self.size-1 or y>self.size-1:
 			return
-		self.bord[x][y] = self.getCurrentPlayer()
-		self.moveCount += 1
-
-
-		tempResult = self.checkWon()
-		if tempResult != 0:
-			if tempResult > 0:
-				self.printBord()
-				print(f'You won !')
-			else:
-				self.printBord()
-				print(f'You Lose !')
+		self.setFlag(x, y, self.humanFlag)
+		if self.checkBord() == self.humanFlag:
+			print("Won HUMAN")
 			exit()
 
-	def printBord(self):
-		print('\x1bc')
-		for i in range(0,self.size*2+6):
-			print("_",end='')
-		print() #New Line
-
-		print(end="|   |")
+	def cpuMove(self):
+		#Forcing to set flag in center
+		if self.count < 2 and self.size%2 != 0:
+			mid = int((self.size-1)/2)
+			if self.bord[mid][mid] == 0:
+				self.setFlag(mid, mid, self.cpuFlag)
+				return
+		bestScore = -100
+		bestPos = (0,0)
 		for i in range(0,self.size):
-			print(i+1,end=" ")
-		print(end="|")
-		print() #New Line
-
-		for i in range(0,self.size*2+6):
-			print("-",end='')
-		print() #New Line
-
-		for i in range(0,self.size):
-			print("|",i+1,"|",end="")
 			for j in range(0,self.size):
-				if self.bord[i][j] != 0:
-					print(string.ascii_uppercase[self.bord[i][j]-1],end=" ")
-				else:
-					print(end="  ")
-			print("|")
+				if self.bord[i][j] == 0:
+					self.bord[i][j] = self.cpuFlag
+					if self.checkBord() == self.cpuFlag:
+						#CPU Won!
+						self.setFlag(i, j, self.cpuFlag)
+						return
+					else:
+						score = self.minimax(self.depth,False)
+					self.bord[i][j] = 0
+					#Maximizing
+					if bestScore < score:
+						bestScore = score
+						bestPos = (i,j)
+		self.setFlag(bestPos[0], bestPos[1], self.cpuFlag)
 
-		for i in range(0,self.size*2+6):
-			print("-",end='')
-		print() #New Line
+		if self.checkBord() == self.cpuFlag:
+			print("Won CPU")
+			exit()
+
+	def minimax(self,depth,isMax):
+		if depth == 0:
+			return 0
+		bestScore = 100
+		if isMax:
+			bestScore = -100
+		for i in range(0,self.size):
+			for j in range(0,self.size):
+				if self.bord[i][j] == 0:
+					#Maximizing player
+					if isMax:
+						self.bord[i][j] = self.cpuFlag
+						if self.checkBord() == self.cpuFlag:
+							score = 1
+						else:
+							score = self.minimax(depth-1, not isMax)
+						self.bord[i][j] = 0
+						bestScore = max(score, bestScore)
+					#Minimizing Player
+					else:
+						self.bord[i][j] = self.humanFlag
+						if self.checkBord() == self.humanFlag:
+							score = -1
+						else:
+							score = self.minimax(depth-1, not isMax)
+						self.bord[i][j] = 0
+						bestScore = min(score, bestScore)
+		return bestScore
 
 
-TicTacToe(3, 2).gameManagerCPU()
+TicTacToe(3, False).gameManager()
